@@ -21,9 +21,8 @@ import org.kodein.di.ktor.KodeinFeature
 import org.kodein.di.ktor.kodein
 import ru.netology.dto.PostRequestDto
 import ru.netology.dto.PostResponseDto
-import ru.netology.model.PostModel
 import ru.netology.repository.PostRepository
-import ru.netology.repository.PostRepositoryMutex
+import ru.netology.repository.PostRepositoryInMemoryImpl
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
@@ -55,14 +54,15 @@ fun Application.module() {
 
     install(KodeinFeature) {
         bind<PostRepository>() with singleton {
-            PostRepositoryMutex().apply {
+            PostRepositoryInMemoryImpl().apply {
                 runBlocking {
-                    save(PostModel(0, "author", "test"))
+                    main()
                 }
             }
         }
     }
 
+    //TODO вынести в v1
     install(Routing) {
         val repo by kodein().instance<PostRepository>()
 
@@ -79,12 +79,31 @@ fun Application.module() {
             }
             post {
                 val request = call.receive<PostRequestDto>()
-                val model = PostModel(id = request.id, author = request.author, content = request.content)
-                val response = repo.save(model)
+                val model = PostRequestDto.toModel(request)
+                val modelForResponse = repo.save(model) //Почему мы отпрвляем модель , а не ResponseDTO?
+                val response = PostResponseDto.fromModel(modelForResponse)
                 call.respond(response)
             }
             delete("/{id}") {
-                TODO()
+                val id = call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException("id", "Long")
+                val model = repo.getById(id) ?: throw NotFoundException()
+                val response = PostResponseDto.fromModel(model)
+                repo.removeById(id)
+                call.respond(response)
+                //Нужно ли что-нибудь возвращать? true/false? или Exception
+            }
+            post("/{id}/likes") {
+                val id = call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException("id", "Long")
+                val modelForResponse = repo.likeById(id) ?: throw NotFoundException()
+                val response = PostResponseDto.fromModel(modelForResponse)
+                call.respond(response)
+            }
+
+            delete("/{id}/likes") {
+                val id = call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException("id", "Long")
+                val modelForResponse = repo.dislikeById(id) ?: throw NotFoundException()
+                val response = PostResponseDto.fromModel(modelForResponse)
+                call.respond(response)
             }
         }
     }
