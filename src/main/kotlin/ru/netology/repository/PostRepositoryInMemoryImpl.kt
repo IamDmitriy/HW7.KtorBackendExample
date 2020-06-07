@@ -42,39 +42,6 @@ class PostRepositoryInMemoryImpl : PostRepository {
         }
     }
 
-    override suspend fun likeById(id: Long): PostModel? = mutex.withLock {
-        val index = items.indexOfFirst { it.id == id }
-
-        if (index < 0) {
-            return null
-        }
-
-        val post = items[index]
-
-        val newPost = post.copy(countLikes = post.countLikes.inc())
-
-        items[index] = newPost
-
-        return newPost
-
-    }
-
-    override suspend fun dislikeById(id: Long): PostModel? = mutex.withLock {
-        val index = items.indexOfFirst { it.id == id }
-
-        if (index < 0) {
-            return null
-        }
-
-        val post = items[index]
-
-        val newPost = post.copy(countLikes = post.countLikes.dec())
-
-        items[index] = newPost
-
-        return newPost
-    }
-
     private fun generateContent(): List<PostModel> {
 
         return listOf(
