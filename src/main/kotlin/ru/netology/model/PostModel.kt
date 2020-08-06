@@ -1,7 +1,7 @@
 package ru.netology.model
 
 data class PostModel(
-    val id: Long,
+    val id: Long = -1L, //TODO -1 по умолчанию
     val author: String,
     val content: String,
     val created: Long,

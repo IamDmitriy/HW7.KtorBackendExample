@@ -10,10 +10,7 @@ import io.ktor.request.receive
 import io.ktor.request.receiveMultipart
 import io.ktor.response.respond
 import io.ktor.routing.*
-import ru.netology.dto.AuthenticationRequestDto
-import ru.netology.dto.PostRequestDto
-import ru.netology.dto.RegistrationRequestDto
-import ru.netology.dto.UserResponseDto
+import ru.netology.dto.*
 import ru.netology.model.UserModel
 import ru.netology.repository.PostRepository
 import ru.netology.service.FileService
@@ -106,6 +103,37 @@ class RoutingV1(
                                 )
                             call.respond(postService.dislikeById(id))
                         }
+                        post("/{id}/reposts") {
+                            val id =
+                                call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException(
+                                    "id",
+                                    "Long"
+                                )
+                            val repostRequestDto = call.receive<RepostRequestDto>()
+                            val me = call.authentication.principal<UserModel>()
+                            call.respond(postService.repostById(id, me!!, repostRequestDto))
+                        }
+                        get("/{count}/recent/") { ///recent/10 (
+                            val count =
+                                call.parameters["count"]?.toIntOrNull() ?: throw ParameterConversionException(
+                                    "count",
+                                    "Int"
+                                )
+                            call.respond(postService.getRecent(count))
+                        }
+                        get("/{id}/after") {
+                            val id =
+                                call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException(
+                                    "id",
+                                    "Long"
+                                )
+                            call.respond(postService.getPostsAfter(id))
+                        }
+                        post("/before") {
+                            val postsCreatedBeforeRequestDto = call.receive<PostsCreatedBeforeRequestDto>()
+                            call.respond(postService.getPostsCreatedBefore(postsCreatedBeforeRequestDto))
+                        }
+
                     }
                 }
 

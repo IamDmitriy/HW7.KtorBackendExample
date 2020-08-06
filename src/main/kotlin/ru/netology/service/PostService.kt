@@ -4,6 +4,10 @@ import io.ktor.features.NotFoundException
 import ru.netology.ForbiddenException
 import ru.netology.dto.PostRequestDto
 import ru.netology.dto.PostResponseDto
+import ru.netology.dto.PostsCreatedBeforeRequestDto
+import ru.netology.dto.RepostRequestDto
+import ru.netology.model.PostModel
+import ru.netology.model.PostType
 import ru.netology.model.UserModel
 import ru.netology.repository.PostRepository
 
@@ -51,5 +55,34 @@ class PostService(
         val copy =
             model.copy(countLikes = model.countLikes.dec())
         return PostResponseDto.fromModel(repo.save(copy))
+    }
+
+    suspend fun repostById(id: Long, user: UserModel, repostRequestDto: RepostRequestDto): PostResponseDto {
+        val reposted = repo.getById(id)
+        val newPostForSave = PostModel(
+            id = -1,
+            author = user.username,
+            content = repostRequestDto.content,
+            created = System.currentTimeMillis(),
+            type = PostType.REPOST,
+            source = reposted
+        )
+        val repost = repo.save(newPostForSave)
+        return PostResponseDto.fromModel(repost)
+    }
+
+    suspend fun getRecent(count: Int):  List<PostResponseDto> {
+        val recent = repo.getRecent(count)
+        return recent.map(PostResponseDto.Companion::fromModel)
+    }
+
+    suspend fun getPostsAfter(id: Long): List<PostResponseDto> {
+        val newPosts = repo.getPostsAfter(id)
+        return newPosts.map(PostResponseDto.Companion::fromModel)
+    }
+
+    suspend fun getPostsCreatedBefore (dto: PostsCreatedBeforeRequestDto): List<PostResponseDto> {
+        val oldPosts = repo.getPostsCreatedBefore(dto.idCurPost, dto.countUploadedPosts)
+        return oldPosts.map(PostResponseDto.Companion::fromModel)
     }
 }
