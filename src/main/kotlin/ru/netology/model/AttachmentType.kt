@@ -1,5 +1,5 @@
 package ru.netology.model
 
-enum class MediaType {
+enum class AttachmentType {
     IMAGE
 }

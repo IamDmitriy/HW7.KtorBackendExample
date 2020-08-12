@@ -133,6 +133,12 @@ class RoutingV1(
                             val postsCreatedBeforeRequestDto = call.receive<PostsCreatedBeforeRequestDto>()
                             call.respond(postService.getPostsCreatedBefore(postsCreatedBeforeRequestDto))
                         }
+                        post("/create") {
+                            val createPostRequestDto = call.receive<CreatePostRequestDto>()
+                            val me = call.authentication.principal<UserModel>()
+                            val postResponseDto = postService.createPost(createPostRequestDto, me!!)
+                            call.respond(postResponseDto)
+                        }
 
                     }
                 }

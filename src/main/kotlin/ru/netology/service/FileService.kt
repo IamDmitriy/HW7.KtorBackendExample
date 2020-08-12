@@ -9,8 +9,8 @@ import io.ktor.http.content.forEachPart
 import io.ktor.http.content.streamProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import ru.netology.dto.MediaResponseDto
-import ru.netology.model.MediaType
+import ru.netology.dto.AttachmentResponseDto
+import ru.netology.model.AttachmentType
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -26,8 +26,8 @@ class FileService(private val uploadPath: String) {
         }
     }
 
-    suspend fun save(multipart: MultiPartData): MediaResponseDto {
-        var response: MediaResponseDto? = null
+    suspend fun save(multipart: MultiPartData): AttachmentResponseDto {
+        var response: AttachmentResponseDto? = null
         multipart.forEachPart { part ->
             when (part) {
                 is PartData.FileItem -> {
@@ -45,7 +45,7 @@ class FileService(private val uploadPath: String) {
                             }
                         }
                         part.dispose()
-                        response = MediaResponseDto(name, MediaType.IMAGE)
+                        response = AttachmentResponseDto(name, AttachmentType.IMAGE)
                         return@forEachPart
                     }
                 }
